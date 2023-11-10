@@ -1,5 +1,5 @@
 # qBittorrent, OpenVPN and WireGuard, qbittorrentvpn
-FROM arm64v8/debian:bullseye-slim
+FROM debian:bullseye-slim
 
 WORKDIR /opt
 
@@ -222,4 +222,4 @@ RUN chmod +x /etc/qbittorrent/*.sh /etc/qbittorrent/*.init /etc/openvpn/*.sh
 EXPOSE 8080
 EXPOSE 8999
 EXPOSE 8999/udp
-CMD ["bash", "/etc/openvpn/start.sh"]
+CMD ["/bin/bash", "/etc/openvpn/start.sh"]
