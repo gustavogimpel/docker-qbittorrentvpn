@@ -11,8 +11,17 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#          - dockerfile: "Dockerfile"
+#            tags: "latest"
+#            platforms: "linux/amd64"
+          - dockerfile: "Dockerfile"
+            tags: "latest-arm64"
+            platforms: "linux/arm64"
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker buildx build --platform linux/arm64 . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build --platform ${{ matrix.platforms }} -f docker/${{ matrix.dockerfile }}
