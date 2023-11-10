@@ -8,86 +8,6 @@ RUN usermod -u 99 nobody
 # Make directories
 RUN mkdir -p /downloads /config/qBittorrent /etc/openvpn /etc/qbittorrent
 
-# Install boost
-RUN apt update \
-    && apt upgrade -y  \
-    && apt install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    g++ \
-    libxml2-utils \
-    && BOOST_VERSION_DOT=$(curl -sX GET "https://www.boost.org/feed/news.rss" | xmllint --xpath '//rss/channel/item/title/text()' - | awk -F 'Version' '{print $2 FS}' - | sed -e 's/Version//g;s/\ //g' | xargs | awk 'NR==1{print $1}' -) \
-    && BOOST_VERSION=$(echo ${BOOST_VERSION_DOT} | head -n 1 | sed -e 's/\./_/g') \
-    && curl -o /opt/boost_${BOOST_VERSION}.tar.gz -L https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION_DOT}/source/boost_${BOOST_VERSION}.tar.gz \
-    && tar -xzf /opt/boost_${BOOST_VERSION}.tar.gz -C /opt \
-    && cd /opt/boost_${BOOST_VERSION} \
-    && ./bootstrap.sh --prefix=/usr \
-    && ./b2 --prefix=/usr install \
-    && cd /opt \
-    && rm -rf /opt/* \
-    && apt -y purge \
-    curl \
-    ca-certificates \
-    g++ \
-    libxml2-utils \
-    && apt-get clean \
-    && apt --purge autoremove -y \
-    && rm -rf \
-    /var/lib/apt/lists/* \
-    /tmp/* \
-    /var/tmp/*
-
-# Install Ninja
-RUN apt update \
-    && apt upgrade -y \
-    && apt install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    jq \
-    unzip \
-    && NINJA_ASSETS=$(curl -sX GET "https://api.github.com/repos/ninja-build/ninja/releases" | jq '.[] | select(.prerelease==false) | .assets_url' | head -n 1 | tr -d '"') \
-    && NINJA_DOWNLOAD_URL=$(curl -sX GET ${NINJA_ASSETS} | jq '.[] | select(.name | match("ninja-linux";"i")) .browser_download_url' | tr -d '"') \
-    && curl -o /opt/ninja-linux.zip -L ${NINJA_DOWNLOAD_URL} \
-    && unzip /opt/ninja-linux.zip -d /opt \
-    && mv /opt/ninja /usr/local/bin/ninja \
-    && chmod +x /usr/local/bin/ninja \
-    && rm -rf /opt/* \
-    && apt purge -y \
-    ca-certificates \
-    curl \
-    jq \
-    unzip \
-    && apt-get clean \
-    && apt --purge autoremove -y \
-    && rm -rf \
-    /var/lib/apt/lists/* \
-    /tmp/* \
-    /var/tmp/*
-
-# Install cmake
-RUN apt update \
-    && apt upgrade -y \
-    && apt install -y  --no-install-recommends \
-    ca-certificates \
-    curl \
-    jq \
-    && CMAKE_ASSETS=$(curl -sX GET "https://api.github.com/repos/Kitware/CMake/releases" | jq '.[] | select(.prerelease==false) | .assets_url' | head -n 1 | tr -d '"') \
-    && CMAKE_DOWNLOAD_URL=$(curl -sX GET ${CMAKE_ASSETS} | jq '.[] | select(.name | match("Linux-aarch64.sh";"i")) .browser_download_url' | tr -d '"') \
-    && curl -o /opt/cmake.sh -L ${CMAKE_DOWNLOAD_URL} \
-    && chmod +x /opt/cmake.sh \
-    && /bin/bash /opt/cmake.sh --skip-license --prefix=/usr \
-    && rm -rf /opt/* \
-    && apt purge -y \
-    ca-certificates \
-    curl \
-    jq \
-    && apt-get clean \
-    && apt --purge autoremove -y \
-    && rm -rf \
-    /var/lib/apt/lists/* \
-    /tmp/* \
-    /var/tmp/*
-
 # Compile and install libtorrent-rasterbar
 RUN apt update \
     && apt upgrade -y \
@@ -95,9 +15,14 @@ RUN apt update \
     build-essential \
     ca-certificates \
     curl \
+    gcc \
+    g++ \
     jq \
+    libboost-all-dev \
+    ninja-build \
+    cmake \
     libssl-dev \
-    && LIBTORRENT_ASSETS=$(curl -sX GET "https://api.github.com/repos/arvidn/libtorrent/releases" | jq '.[] | select(.prerelease==false) | select(.target_commitish=="RC_1_2") | .assets_url' | head -n 1 | tr -d '"') \
+    && LIBTORRENT_ASSETS=$(curl -sX GET "https://api.github.com/repos/arvidn/libtorrent/releases" | jq '.[] | select(.prerelease==false) | select(.target_commitish=="RC_2_0") | .assets_url' | head -n 1 | tr -d '"') \
     && LIBTORRENT_DOWNLOAD_URL=$(curl -sX GET ${LIBTORRENT_ASSETS} | jq '.[0] .browser_download_url' | tr -d '"') \
     && LIBTORRENT_NAME=$(curl -sX GET ${LIBTORRENT_ASSETS} | jq '.[0] .name' | tr -d '"') \
     && curl -o /opt/${LIBTORRENT_NAME} -L ${LIBTORRENT_DOWNLOAD_URL} \
@@ -152,6 +77,11 @@ RUN apt update \
     curl \
     git \
     jq \
+    gcc \
+    g++ \
+    libboost-all-dev \
+    ninja-build \
+    cmake \
     libssl-dev \
     pkg-config \
     qtbase5-dev \
